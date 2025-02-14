@@ -64,7 +64,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            opacity: 0.5;
+            opacity: 0.75;
             transition: opacity 0.3s ease; /* Smooth transition for opacity change */
         }
 
@@ -253,23 +253,27 @@
             display: block;
             left: 0;
             top: 0;
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, filter 0.3s ease; /* Added filter transition */
             mix-blend-mode: normal; /* Ensures visibility on all backgrounds */
         }
 
         #pizza-cursor.pulsing {
             animation: pizzaPulse 1s infinite;
+            filter: drop-shadow(0 0 10px #0f0); /* Added green glow */
         }
 
         @keyframes pizzaPulse {
             0% {
                 transform: scale(1);
+                filter: drop-shadow(0 0 5px #0f0); /* Softer glow */
             }
             50% {
                 transform: scale(1.3);
+                filter: drop-shadow(0 0 15px #0f0); /* Stronger glow */
             }
             100% {
                 transform: scale(1);
+                filter: drop-shadow(0 0 5px #0f0); /* Softer glow */
             }
         }
 
@@ -329,6 +333,18 @@
             stroke-linecap: round;
             filter: drop-shadow(0 0 5px #0f0);
             transition: stroke-dashoffset 0.1s linear;
+        }
+
+        /* Styles for the ElevenLabs widget */
+        #elevenlabs-widget {
+            display: none; /* Initially hidden */
+            opacity: 0;
+            transition: opacity 1s ease; /* Smooth fade-in */
+            z-index: 9; /* Make sure it's above other elements */
+            position: absolute;
+            transform-style: preserve-3d;
+            pointer-events: none;
+            cursor: none;
         }
     </style>
 </head>
@@ -412,5 +428,10 @@
     }
     </script>
     <script type="module" src="main.js"></script>
+
+    <!-- ElevenLabs Conversational AI Widget -->
+    <elevenlabs-convai id="elevenlabs-widget" agent-id="C8e92H32pyyuNVNbk0JT"></elevenlabs-convai>
+    <script src="ElevenLabs/index.js" async type="text/javascript"></script>
+
 </body>
 </html> 

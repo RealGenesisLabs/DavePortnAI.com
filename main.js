@@ -254,6 +254,28 @@ function showVideos() {
     const videos = document.querySelectorAll('.video-container');
     videoElements = Array.from(videos);
 
+    // Position ElevenLabs widget beneath the head
+    const elevenLabsWidget = document.getElementById('elevenlabs-widget');
+    if (elevenLabsWidget) {
+        // Position it at the bottom of the orbital circle
+        const angle = Math.PI / 2; // 90 degrees - bottom of the circle
+        const x = Math.cos(angle) * (orbitRadiusX * 0.3); // Reduced radius more
+        const y = Math.sin(angle) * (orbitRadiusY * 0.8); // Adjusted Y position
+        const z = 0; // Set Z to 0 to keep it in front
+        
+        elevenLabsWidget.style.transform = `translate(-50%, -50%) 
+                                          translate3d(${x}px, ${y + 40}px, ${z}px)`;
+        
+        // Move these lines after the transform
+        elevenLabsWidget.style.display = 'block';
+        elevenLabsWidget.style.left = '50%';
+        elevenLabsWidget.style.top = '50%';
+        
+        setTimeout(() => {
+            elevenLabsWidget.style.opacity = '1';
+        }, 50);
+    }
+
     // Create single circular progress element
     circularProgress = document.createElement('div');
     circularProgress.classList.add('circular-progress');
@@ -856,6 +878,29 @@ function setupPumpFunAudio() {
     let pumpFunLoadingInterval;
     let pumpFunProgress = 0;
 
+    // Helper function to play audio
+    const playPumpFunAudio = () => {
+        if (!isPumpFunAudioPlaying) {
+            if (!pumpFunAudio.analysisSetup) {
+                setupAudioAnalysis(pumpFunAudio);
+                pumpFunAudio.analysisSetup = true;
+            }
+            pumpFunAudio.currentTime = 0;
+            pumpFunAudio.play();
+            isPumpFunAudioPlaying = true;
+
+            // Add ended event listener to reset the state
+            pumpFunAudio.addEventListener('ended', () => {
+                isPumpFunAudioPlaying = false;
+            }, { once: true });
+        }
+    };
+
+    // Add click handler - removed preventDefault() so link still works
+    pumpFunLogo.addEventListener('click', () => {
+        playPumpFunAudio();
+    });
+
     pumpFunLogo.addEventListener('mouseenter', () => {
         // Reset and show progress circle
         pumpFunProgress = 0;
@@ -876,21 +921,7 @@ function setupPumpFunAudio() {
 
             if (pumpFunProgress >= 100) {
                 clearInterval(pumpFunLoadingInterval);
-                if (!pumpFunAudio.analysisSetup) {
-                    setupAudioAnalysis(pumpFunAudio);
-                    pumpFunAudio.analysisSetup = true;
-                }
-                // Only play if it's not already playing
-                if (!isPumpFunAudioPlaying) {
-                    pumpFunAudio.currentTime = 0;
-                    pumpFunAudio.play();
-                    isPumpFunAudioPlaying = true;
-
-                    // Add ended event listener to reset the state
-                    pumpFunAudio.addEventListener('ended', () => {
-                        isPumpFunAudioPlaying = false;
-                    }, { once: true });
-                }
+                playPumpFunAudio(); // Use the helper function here
             }
         }, interval);
     });

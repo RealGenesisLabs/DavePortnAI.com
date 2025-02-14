@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Head Model Mouse Tracking</title>
+    <style>
+        /* Global cursor settings */
+        * {
+            cursor: none !important;
+        }
+
+        html, body, iframe, #intro-overlay, #intro-video {
+            cursor: none !important;
+        }
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            /* Removed cursor from here */
+        }
+        #scene-container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            cursor: none; /* Hide the default cursor inside the scene */
+            z-index: 3; /* Add this to ensure 3D content appears above background */
+            background: transparent !important; /* Ensure no background */
+        }
+        .video-container {
+            position: absolute;
+            width: 400px;
+            height: 240px;
+            transition: all 0.5s ease;
+            z-index: 10;
+            opacity: 0;
+            transform-style: preserve-3d;
+            transform: scale(0.5);
+            pointer-events: auto;
+        }
+        .video-container.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .video-container:hover {
+            z-index: 20;
+        }
+        .video-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 8px;
+            pointer-events: none;
+        }
+        /* --- Twitter Icon Styles --- */
+        .twitter-icon {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 30px;
+            height: 30px;
+            z-index: 12;
+            cursor: none !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.5;
+            transition: opacity 0.3s ease; /* Smooth transition for opacity change */
+        }
+
+        .twitter-icon:hover {
+            opacity: 1; /* Full opacity on hover */
+        }
+
+        .twitter-icon img {
+            width: 100%; /* Make the image fill the container */
+            height: 100%;
+            object-fit: contain; /* Ensure the image is scaled correctly */
+        }
+        /* Remove individual video positioning since we'll handle it in JavaScript */
+        #video1, #video2, #video3, #video4, #video5, #video6 {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+        }
+        #video1.show, #video2.show, #video3.show, #video4.show, #video5.show, #video6.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* Intro overlay styles */
+        #intro-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 1200;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            cursor: none;
+        }
+
+        /* Loading container styles */
+        #loading-container {
+            width: 900px; /* Increased to match logo size */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 60px; /* Add space for button container below */
+        }
+
+        /* Add new button container */
+        #button-container {
+            position: absolute;
+            top: calc(50% + 220px); /* Position below loading container */
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        /* Logo animation video styles */
+        #logo-animation {
+            width: 100%;
+            max-width: 900px; /* Increased from 300px to 900px (3x) */
+            margin-bottom: 20px;
+        }
+
+        /* Enter button styles */
+        #enter-button {
+            background: transparent;
+            border: 2px solid #0f0;
+            color: #0f0;
+            padding: 10px 30px;
+            font-size: 18px;
+            font-family: 'Courier New', monospace;
+            cursor: none !important;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px #0f0;
+            box-shadow: 0 0 10px #0f0;
+            opacity: 0;
+            display: inline-block;
+        }
+
+        #enter-button:hover {
+            background: #0f02;
+            transform: scale(1.1); /* Fix scaling animation */
+            box-shadow: 0 0 20px #0f0;
+        }
+
+        #loading-bar {
+            width: 100%;
+            height: 20px;
+            border: 2px solid #0f0;
+            position: relative;
+            margin-top: 20px;
+            box-shadow: 0 0 10px #0f0, inset 0 0 10px #0f0; /* Added outer and inner glow */
+            border-radius: 10px; /* Rounded corners */
+            overflow: hidden; /* Keep the progress bar within bounds */
+        }
+
+        #loading-progress {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #0f0, #0f0); /* Gradient effect */
+            transition: width 4s ease; /*Loading Bar Animation */
+            box-shadow: 0 0 20px #0f0; /* Glow effect on the progress */
+            position: relative;
+        }
+
+        #loading-progress::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(0, 255, 0, 0.4),
+                transparent
+            );
+            animation: loading-shine 2s infinite;
+        }
+
+        @keyframes loading-shine {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        #loading-text {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 18px;
+            text-shadow: 0 0 5px #0f0;
+        }
+
+        /* Intro video styles */
+        #intro-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: 0;
+            display: none;
+            border: none;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #end-frame {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: -400000; /* Lower than scene-container's z-index 3 */
+            display: none;
+        }
+
+        /* Pizza container styles */
+        .pizza-container {
+            position: absolute;
+            cursor: none !important;
+        }
+        .pizza-container:active {
+            cursor: none !important;
+        }
+
+        /* Pizza cursor styles */
+        #pizza-cursor {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            background-image: url('models/pizzamouse.png');
+            background-size: cover;
+            pointer-events: none;
+            z-index: 999999999; /* Increased significantly to be above everything */
+            display: block;
+            left: 0;
+            top: 0;
+            transition: transform 0.3s ease;
+            mix-blend-mode: normal; /* Ensures visibility on all backgrounds */
+        }
+
+        #pizza-cursor.pulsing {
+            animation: pizzaPulse 1s infinite;
+        }
+
+        @keyframes pizzaPulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.3);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Pump Fun Logo and Contract Address Styles */
+        #pump-fun-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 1000;
+            opacity: 0; /* Start hidden for fade in */
+            transition: opacity 1s ease;
+        }
+
+        #pump-fun-logo {
+            width: 50px;
+            height: auto;
+            transition: all 0.3s ease;
+            filter: drop-shadow(0 0 0 #00ff00);
+            cursor: none !important;
+        }
+
+        #pump-fun-logo:hover {
+            transform: scale(1.25);
+            filter: drop-shadow(0 0 10px #00ff00);
+        }
+
+        #contract-address {
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        /* Circular Loading Progress */
+        .circular-progress {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            display: none;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .circular-progress svg {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+
+        .circular-progress circle {
+            fill: none;
+            stroke: #0f0;
+            stroke-width: 4;
+            stroke-linecap: round;
+            filter: drop-shadow(0 0 5px #0f0);
+            transition: stroke-dashoffset 0.1s linear;
+        }
+    </style>
+</head>
+<body>
+    <!-- Custom Pizza Cursor - Moved to root level -->
+    <div id="pizza-cursor"></div>
+
+    <div id="intro-overlay">
+        <div id="loading-container">
+            <!-- Add the animated logo video -->
+            <video id="logo-animation" playsinline muted>
+                <source src="Assets/PortnaiLogoAnimated.mp4" type="video/mp4">
+            </video>
+            <div id="loading-bar">
+                <div id="loading-progress"></div>
+            </div>
+            <div id="loading-text">Initializing...</div>
+        </div>
+        <!-- Move button to separate container -->
+        <div id="button-container">
+            <button id="enter-button" style="display: none;">Enter</button>
+        </div>
+    </div>
+
+    <!-- Add background music -->
+    <audio id="background-music" loop>
+        <source src="Assets/Audio/ScifiSong.mp3" type="audio/mp3">
+    </audio>
+
+    <!-- Add intro voice audio -->
+    <audio id="intro-audio">
+        <source src="Assets/Audio/DaveIntroAudioEcho.mp3" type="audio/mp3">
+    </audio>
+
+    <!-- Add pump fun logo hover audio -->
+    <audio id="pump-fun-audio">
+        <source src="Assets/Audio/PumpFunHover.mp3" type="audio/mp3">
+    </audio>
+
+    <video id="intro-video" preload="auto" playsinline style="pointer-events: none;">
+    </video>
+    <img id="end-frame" src="./Assets/EndFrame.png" alt="End Frame">
+
+    <div id="scene-container">
+        <!-- Removed pizza cursor from here since we moved it to root level -->
+        
+        <!-- Add the logo and contract address container -->
+        <div id="pump-fun-container">
+            <a href="https://pump.fun/coin/B9uAk1KK7kuq8PhMvJJ7xE2gZj5Nwt9mSLUa3WtNpump" target="_blank">
+                <img id="pump-fun-logo" src="Assets/PumpFunLogo.png" alt="Pump Fun Logo">
+            </a>
+            <div id="contract-address">CA: B9uAkzKKdku38Ph2vJJ7xE2gZj5Nwt9mSLUa3WtNpump</div>
+        </div>
+
+        <div class="video-container" id="video1">
+            <iframe src="https://streamable.com/e/vwg8gv?autoplay=1&nocontrols=1" frameborder="0" allowfullscreen></iframe>
+        </div>
+        <div class="video-container" id="video2">
+            <iframe src="https://streamable.com/e/v7z3mr?autoplay=1&nocontrols=1" frameborder="0" allowfullscreen></iframe>
+        </div>
+        <div class="video-container" id="video3">
+            <iframe src="https://streamable.com/e/kr73il?autoplay=1&nocontrols=1" frameborder="0" allowfullscreen></iframe>
+        </div>
+        <div class="video-container" id="video4">
+            <iframe src="https://streamable.com/e/pibxiq?autoplay=1&nocontrols=1" frameborder="0" allowfullscreen></iframe>
+        </div>
+        <div class="video-container" id="video5">
+            <iframe src="https://streamable.com/e/1c2pj8?autoplay=1&nocontrols=1" frameborder="0" allowfullscreen></iframe>
+        </div>
+        <div class="video-container" id="video6">
+            <iframe src="https://streamable.com/e/vwg8gv?autoplay=1&nocontrols=1" frameborder="0" allowfullscreen></iframe>
+        </div>
+    </div>
+    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="main.js"></script>
+</body>
+</html> 

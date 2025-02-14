@@ -1,0 +1,12 @@
+{
+  "name": "3d-head-model-website",
+  "version": "1.0.0",
+  "description": "Website with 3D head model tracking mouse movement",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+} 

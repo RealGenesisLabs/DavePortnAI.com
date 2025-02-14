@@ -264,7 +264,7 @@ function showVideos() {
         const z = 0; // Set Z to 0 to keep it in front
         
         elevenLabsWidget.style.transform = `translate(-50%, -50%) 
-                                          translate3d(${x}px, ${y + 40}px, ${z}px)`;
+                                          translate3d(${x}px, ${y + 60}px, ${z}px)`;
         
         // Move these lines after the transform
         elevenLabsWidget.style.display = 'block';

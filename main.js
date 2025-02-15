@@ -51,6 +51,9 @@ let lastPlayedClickIndex = -1; // Track the last played click sound
 let isPumpFunAudioPlaying = false;
 let isHeadAudioPlaying = false;
 
+// Add the new setup function for X logo audio
+let isXLogoAudioPlaying = false;
+
 // --- Function to set initial model opacity ---
 function setInitialModelOpacity() {
   if (model) {
@@ -242,10 +245,19 @@ async function playIntroAnimation() {
         introVideo.style.display = 'none';
         endFrame.style.display = 'block';
 
-        // Fade in the logo and contract address
+        // Fade in the logo, contract address, app store badges, and X logo
         const pumpFunContainer = document.getElementById('pump-fun-container');
+        const appStoreBadges = document.getElementById('app-store-badges');
+        const xLogoContainer = document.getElementById('x-logo-container');
+        
         if (pumpFunContainer) {
             pumpFunContainer.style.opacity = '1';
+        }
+        if (appStoreBadges) {
+            appStoreBadges.style.opacity = '1';
+        }
+        if (xLogoContainer) {
+            xLogoContainer.style.opacity = '1';
         }
     }, { once: true });
 }
@@ -588,6 +600,8 @@ function init() {
             // Add these new setup calls
             setupPumpFunAudio();
             setupHeadClickAudio();
+            setupAppStoreAudio();
+            setupXLogoAudio();
         },
         function (xhr) {
             console.log((xhr.loaded / xhr.total * 100) + '% loaded');
@@ -1002,6 +1016,160 @@ function setupHeadClickAudio() {
                     isHeadAudioPlaying = false;
                 }, { once: true });
             }
+        });
+    }
+}
+
+// Add the new setup function for app store badges audio
+function setupAppStoreAudio() {
+    const appStoreAudio = document.getElementById('app-store-audio');
+    const appStoreBadges = document.getElementById('app-store-badges');
+    let appStoreLoadingInterval;
+    let appStoreProgress = 0;
+
+    // Helper function to play audio
+    const playAppStoreAudio = () => {
+        if (!isPumpFunAudioPlaying) {
+            if (!appStoreAudio.analysisSetup) {
+                setupAudioAnalysis(appStoreAudio);
+                appStoreAudio.analysisSetup = true;
+            }
+            appStoreAudio.currentTime = 0;
+            appStoreAudio.play();
+            isPumpFunAudioPlaying = true;
+
+            // Add ended event listener to reset the state
+            appStoreAudio.addEventListener('ended', () => {
+                isPumpFunAudioPlaying = false;
+            }, { once: true });
+        }
+    };
+
+    // Add click handler
+    appStoreBadges.addEventListener('click', () => {
+        playAppStoreAudio();
+    });
+
+    appStoreBadges.addEventListener('mouseenter', () => {
+        // Reset and show progress circle
+        appStoreProgress = 0;
+        circularProgress.style.display = 'block';
+        updateProgressCircle();
+
+        if (appStoreLoadingInterval) clearInterval(appStoreLoadingInterval);
+
+        const duration = 2000;
+        const interval = 50;
+        const steps = duration / interval;
+        const increment = 100 / steps;
+
+        appStoreLoadingInterval = setInterval(() => {
+            appStoreProgress = Math.min(100, appStoreProgress + increment);
+            loadingProgress = appStoreProgress; // Update global progress for circle
+            updateProgressCircle();
+
+            if (appStoreProgress >= 100) {
+                clearInterval(appStoreLoadingInterval);
+                playAppStoreAudio();
+            }
+        }, interval);
+    });
+
+    appStoreBadges.addEventListener('mouseleave', () => {
+        if (appStoreLoadingInterval) clearInterval(appStoreLoadingInterval);
+        
+        const duration = 500;
+        const interval = 50;
+        const steps = duration / interval;
+        const decrement = appStoreProgress / steps;
+
+        appStoreLoadingInterval = setInterval(() => {
+            appStoreProgress = Math.max(0, appStoreProgress - decrement);
+            loadingProgress = appStoreProgress;
+            updateProgressCircle();
+
+            if (appStoreProgress <= 0) {
+                clearInterval(appStoreLoadingInterval);
+                circularProgress.style.display = 'none';
+            }
+        }, interval);
+    });
+}
+
+// Add the new setup function for X logo audio
+function setupXLogoAudio() {
+    const xLogoAudio = document.getElementById('x-logo-audio');
+    const xLogo = document.getElementById('x-logo');
+    let xLogoLoadingInterval;
+    let xLogoProgress = 0;
+
+    // Helper function to play audio
+    const playXLogoAudio = () => {
+        if (!isPumpFunAudioPlaying) {
+            if (!xLogoAudio.analysisSetup) {
+                setupAudioAnalysis(xLogoAudio);
+                xLogoAudio.analysisSetup = true;
+            }
+            xLogoAudio.currentTime = 0;
+            xLogoAudio.play();
+            isPumpFunAudioPlaying = true;
+
+            // Add ended event listener to reset the state
+            xLogoAudio.addEventListener('ended', () => {
+                isPumpFunAudioPlaying = false;
+            }, { once: true });
+        }
+    };
+
+    if (xLogo) {
+        // Add click handler
+        xLogo.addEventListener('click', () => {
+            playXLogoAudio();
+        });
+
+        xLogo.addEventListener('mouseenter', () => {
+            // Reset and show progress circle
+            xLogoProgress = 0;
+            circularProgress.style.display = 'block';
+            updateProgressCircle();
+
+            if (xLogoLoadingInterval) clearInterval(xLogoLoadingInterval);
+
+            const duration = 2000;
+            const interval = 50;
+            const steps = duration / interval;
+            const increment = 100 / steps;
+
+            xLogoLoadingInterval = setInterval(() => {
+                xLogoProgress = Math.min(100, xLogoProgress + increment);
+                loadingProgress = xLogoProgress; // Update global progress for circle
+                updateProgressCircle();
+
+                if (xLogoProgress >= 100) {
+                    clearInterval(xLogoLoadingInterval);
+                    playXLogoAudio();
+                }
+            }, interval);
+        });
+
+        xLogo.addEventListener('mouseleave', () => {
+            if (xLogoLoadingInterval) clearInterval(xLogoLoadingInterval);
+            
+            const duration = 500;
+            const interval = 50;
+            const steps = duration / interval;
+            const decrement = xLogoProgress / steps;
+
+            xLogoLoadingInterval = setInterval(() => {
+                xLogoProgress = Math.max(0, xLogoProgress - decrement);
+                loadingProgress = xLogoProgress;
+                updateProgressCircle();
+
+                if (xLogoProgress <= 0) {
+                    clearInterval(xLogoLoadingInterval);
+                    circularProgress.style.display = 'none';
+                }
+            }, interval);
         });
     }
 }

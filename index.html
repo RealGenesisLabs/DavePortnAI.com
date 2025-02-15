@@ -291,6 +291,29 @@
             transition: opacity 1s ease;
         }
 
+        /* X Logo Styles */
+        #x-logo-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            opacity: 0; /* Start hidden for fade in */
+            transition: opacity 1s ease;
+        }
+
+        #x-logo {
+            width: 50px;
+            height: auto;
+            transition: all 0.3s ease;
+            filter: drop-shadow(0 0 0 #000000);
+            cursor: none !important;
+        }
+
+        #x-logo:hover {
+            transform: scale(1.25);
+            filter: drop-shadow(0 0 10px #00ff00);
+        }
+
         #pump-fun-logo {
             width: 50px;
             height: auto;
@@ -347,6 +370,34 @@
             pointer-events: none;
             cursor: none;
         }
+
+        /* App Store Badges Container */
+        #app-store-badges {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: row;
+            gap: 15px;
+            z-index: 1000;
+            opacity: 0; /* Start hidden for fade in */
+            transition: opacity 1s ease;
+        }
+
+        .app-store-badge {
+            width: 130px;
+            height: 40px;
+            transition: all 0.3s ease;
+            filter: drop-shadow(0 0 0 #00ff00) grayscale(100%);
+            cursor: none !important;
+            opacity: 0.6;
+        }
+
+        .app-store-badge:hover {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 5px #00ff00) grayscale(50%);
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
@@ -385,11 +436,38 @@
         <source src="Assets/Audio/PumpFunHover.mp3" type="audio/mp3">
     </audio>
 
+    <!-- Add app store badges audio -->
+    <audio id="app-store-audio">
+        <source src="Assets/Audio/AppstoreBadges.mp3" type="audio/mp3">
+    </audio>
+
+    <!-- Add X logo audio -->
+    <audio id="x-logo-audio">
+        <source src="Assets/Audio/XAudio.mp3" type="audio/mp3">
+    </audio>
+
     <video id="intro-video" preload="auto" playsinline style="pointer-events: none;">
     </video>
     <img id="end-frame" src="./Assets/EndFrame.png" alt="End Frame">
 
     <div id="scene-container">
+        <!-- Add X Logo Container -->
+        <div id="x-logo-container">
+            <a href="https://x.com/DavePortnAI" target="_blank">
+                <img id="x-logo" src="Assets/xLogoBlack.png" alt="X Logo">
+            </a>
+        </div>
+
+        <!-- Add the app store badges container -->
+        <div id="app-store-badges">
+            <a style="cursor: none !important;">
+                <img src="Assets/google-play-badge.png" alt="Get it on Google Play" class="app-store-badge">
+            </a>
+            <a style="cursor: none !important;">
+                <img src="Assets/app-store-badge.png" alt="Download on the App Store" class="app-store-badge">
+            </a>
+        </div>
+
         <!-- Removed pizza cursor from here since we moved it to root level -->
         
         <!-- Add the logo and contract address container -->
@@ -401,22 +479,22 @@
         </div>
 
         <div class="video-container" id="video1">
-            <iframe src="https://streamable.com/e/vwg8gv?autoplay=1&nocontrols=1" frameborder="0" allowfullscreen></iframe>
+            <iframe src="https://streamable.com/e/vwg8gv?autoplay=1&nocontrols=1&muted=1" frameborder="0" allowfullscreen></iframe>
         </div>
         <div class="video-container" id="video2">
-            <iframe src="https://streamable.com/e/v7z3mr?autoplay=1&nocontrols=1" frameborder="0" allowfullscreen></iframe>
+            <iframe src="https://streamable.com/e/v7z3mr?autoplay=1&nocontrols=1&muted=1" frameborder="0" allowfullscreen></iframe>
         </div>
         <div class="video-container" id="video3">
-            <iframe src="https://streamable.com/e/kr73il?autoplay=1&nocontrols=1" frameborder="0" allowfullscreen></iframe>
+            <iframe src="https://streamable.com/e/kr73il?autoplay=1&nocontrols=1&muted=1" frameborder="0" allowfullscreen></iframe>
         </div>
         <div class="video-container" id="video4">
-            <iframe src="https://streamable.com/e/pibxiq?autoplay=1&nocontrols=1" frameborder="0" allowfullscreen></iframe>
+            <iframe src="https://streamable.com/e/pibxiq?autoplay=1&nocontrols=1&muted=1" frameborder="0" allowfullscreen></iframe>
         </div>
         <div class="video-container" id="video5">
-            <iframe src="https://streamable.com/e/1c2pj8?autoplay=1&nocontrols=1" frameborder="0" allowfullscreen></iframe>
+            <iframe src="https://streamable.com/e/1c2pj8?autoplay=1&nocontrols=1&muted=1" frameborder="0" allowfullscreen></iframe>
         </div>
         <div class="video-container" id="video6">
-            <iframe src="https://streamable.com/e/vwg8gv?autoplay=1&nocontrols=1" frameborder="0" allowfullscreen></iframe>
+            <iframe src="https://streamable.com/e/8c9gmm?autoplay=1&nocontrols=1&muted=1" frameborder="0" allowfullscreen></iframe>
         </div>
     </div>
     <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>

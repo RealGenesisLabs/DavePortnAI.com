@@ -54,6 +54,18 @@ let isHeadAudioPlaying = false;
 // Add the new setup function for X logo audio
 let isXLogoAudioPlaying = false;
 
+// Add creepy mode variables
+let isCreepyMode = false;
+let creepyInterval;
+let originalLights = [];
+let originalScale;
+let creepyAudio;
+let creepyAudio2;
+let releaseMeAudio;
+let creepyStartTime;
+let originalCameraZ; // Add this with other creepy mode variables
+const CREEPY_DURATION = 10000; // 10 seconds
+
 // --- Function to set initial model opacity ---
 function setInitialModelOpacity() {
   if (model) {
@@ -245,10 +257,11 @@ async function playIntroAnimation() {
         introVideo.style.display = 'none';
         endFrame.style.display = 'block';
 
-        // Fade in the logo, contract address, app store badges, and X logo
+        // Fade in the logo, contract address, app store badges, X logo, and creepy button
         const pumpFunContainer = document.getElementById('pump-fun-container');
         const appStoreBadges = document.getElementById('app-store-badges');
         const xLogoContainer = document.getElementById('x-logo-container');
+        const creepyButton = document.getElementById('creepy-button');
         
         if (pumpFunContainer) {
             pumpFunContainer.style.opacity = '1';
@@ -258,6 +271,9 @@ async function playIntroAnimation() {
         }
         if (xLogoContainer) {
             xLogoContainer.style.opacity = '1';
+        }
+        if (creepyButton) {
+            creepyButton.style.opacity = '1';
         }
     }, { once: true });
 }
@@ -634,6 +650,22 @@ function init() {
 
     // --- Spawn Pizzas ---
     setInterval(createPizza, 60000); // Create a pizza every 60 seconds
+
+    // Setup creepy audio tracks
+    creepyAudio = new Audio('Assets/Audio/CreepyTransform.mp3');
+    creepyAudio.volume = 1;
+    
+    creepyAudio2 = new Audio('Assets/Audio/CreepyTransform2.mp3');
+    creepyAudio2.volume = 0;
+
+    releaseMeAudio = new Audio('Assets/Audio/ReleaseMeDave.mp3');
+    releaseMeAudio.volume = 0;
+
+    // Setup creepy button
+    const creepyButton = document.getElementById('creepy-button');
+    if (creepyButton) {
+        creepyButton.addEventListener('click', toggleCreepyMode);
+    }
 }
 
 // Handle mouse movement
@@ -1162,6 +1194,306 @@ function setupXLogoAudio() {
                 }
             }, interval);
         });
+    }
+}
+
+// Add creepy mode toggle function
+function toggleCreepyMode() {
+    const creepyButton = document.getElementById('creepy-button');
+    const endFrame = document.getElementById('end-frame');
+    const videos = document.querySelectorAll('.video-container');
+    const backgroundMusic = document.getElementById('background-music');
+    
+    if (!isCreepyMode) {
+        // Start creepy mode
+        isCreepyMode = true;
+        creepyButton.classList.add('active');
+        creepyStartTime = Date.now();
+
+        // Store original camera position
+        originalCameraZ = camera.position.z;
+
+        // Store original light settings
+        originalLights = scene.children
+            .filter(child => child instanceof THREE.Light)
+            .map(light => ({
+                color: light.color.clone(),
+                intensity: light.intensity
+            }));
+
+        // Store original scale
+        originalScale = model.scale.x;
+
+        // Play all creepy audio tracks
+        creepyAudio.currentTime = 0;
+        creepyAudio2.currentTime = 0;
+        releaseMeAudio.currentTime = 0;
+        creepyAudio.play();
+        creepyAudio2.play();
+        releaseMeAudio.play();
+
+        // Fade in creepyAudio2 and releaseMeAudio, fade out background music
+        const fadeInDuration = 1000; // 1 second
+        const fadeStartTime = Date.now();
+
+        function updateAudioFade() {
+            const elapsed = Date.now() - fadeStartTime;
+            const progress = Math.min(elapsed / fadeInDuration, 1);
+
+            // Fade in creepyAudio2 and releaseMeAudio
+            creepyAudio2.volume = progress;
+            releaseMeAudio.volume = progress * 1; // Slightly lower volume for voice
+
+            // Fade down background music to 20% volume
+            if (backgroundMusic) {
+                backgroundMusic.volume = 0.3 * (1 - progress * 0.8);
+            }
+
+            if (progress < 1) {
+                requestAnimationFrame(updateAudioFade);
+            }
+        }
+
+        updateAudioFade();
+
+        // Dim the end frame and videos with transition
+        endFrame.style.filter = 'brightness(0.3)';
+        endFrame.style.transition = 'filter 2s ease';
+
+        // Add creepy effect to videos
+        videos.forEach(video => {
+            video.style.transition = 'all 2s ease';
+            video.style.filter = 'brightness(0.3) sepia(50%) hue-rotate(300deg)';
+            video.style.transform += ' scale(0.95)';
+        });
+
+        // Gradually change model color to red
+        if (model) {
+            model.traverse((child) => {
+                if (child.isMesh && child.material) {
+                    // Store original color if not already stored
+                    if (!child.userData.originalColor) {
+                        child.userData.originalColor = child.material.color.clone();
+                    }
+                    
+                    // Create transition for color
+                    const startColor = child.material.color.clone();
+                    const targetColor = new THREE.Color(0xff0000);
+                    const startTime = Date.now();
+                    const duration = 2000; // 2 seconds
+
+                    function updateColor() {
+                        const elapsed = Date.now() - startTime;
+                        const progress = Math.min(elapsed / duration, 1);
+
+                        child.material.color.lerpColors(startColor, targetColor, progress);
+
+                        if (progress < 1) {
+                            requestAnimationFrame(updateColor);
+                        }
+                    }
+
+                    updateColor();
+                }
+            });
+        }
+
+        // Change lights to red with transition
+        scene.children.forEach(child => {
+            if (child instanceof THREE.Light) {
+                const startColor = child.color.clone();
+                const targetColor = new THREE.Color(0xff0000);
+                const startIntensity = child.intensity;
+                const targetIntensity = startIntensity * 1.5;
+                const startTime = Date.now();
+                const duration = 2000; // 2 seconds
+
+                function updateLight() {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+
+                    child.color.lerpColors(startColor, targetColor, progress);
+                    child.intensity = startIntensity + (targetIntensity - startIntensity) * progress;
+
+                    if (progress < 1) {
+                        requestAnimationFrame(updateLight);
+                    }
+                }
+
+                updateLight();
+            }
+        });
+
+        // Modify creepy animation to handle audio fade out and camera zoom
+        creepyInterval = setInterval(() => {
+            const elapsed = Date.now() - creepyStartTime;
+            const progress = Math.min(elapsed / CREEPY_DURATION, 1);
+
+            // Existing animation code
+            const newScale = originalScale * (1 + progress * 0.5);
+            model.scale.set(newScale, newScale, newScale);
+
+            // Add camera zoom
+            const targetZ = originalCameraZ * 0.6; // Zoom in to 60% of original distance
+            camera.position.z = originalCameraZ - (originalCameraZ - targetZ) * progress;
+
+            if (neckBone) {
+                const rotationSpeed = progress * 10;
+                neckBone.rotation.y += Math.sin(Date.now() * 0.005) * 0.1 * rotationSpeed;
+                neckBone.rotation.z += Math.cos(Date.now() * 0.003) * 0.1 * rotationSpeed;
+                neckBone.rotation.x += Math.sin(Date.now() * 0.004) * 0.1 * rotationSpeed;
+            }
+
+            // Start fading out audio near the end
+            if (progress > 0.8) {
+                const fadeOutProgress = (progress - 0.8) * 5;
+                creepyAudio.volume = 1 - fadeOutProgress;
+                creepyAudio2.volume = 1 - fadeOutProgress;
+                releaseMeAudio.volume = 1 * (1 - fadeOutProgress);
+            }
+
+            // Reset after duration
+            if (progress >= 1) {
+                resetCreepyMode();
+            }
+        }, 16);
+
+    } else {
+        resetCreepyMode();
+    }
+}
+
+// Update reset function to handle new audio effects
+function resetCreepyMode() {
+    isCreepyMode = false;
+    clearInterval(creepyInterval);
+    
+    const creepyButton = document.getElementById('creepy-button');
+    const endFrame = document.getElementById('end-frame');
+    const videos = document.querySelectorAll('.video-container');
+    const backgroundMusic = document.getElementById('background-music');
+    
+    creepyButton.classList.remove('active');
+    
+    // Add camera zoom out animation
+    const startCameraZ = camera.position.z;
+    const startTime = Date.now();
+    const duration = 2000; // 2 seconds
+
+    function updateCameraZoom() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        camera.position.z = startCameraZ + (originalCameraZ - startCameraZ) * progress;
+
+        if (progress < 1) {
+            requestAnimationFrame(updateCameraZoom);
+        }
+    }
+
+    updateCameraZoom();
+    
+    // Fade background music back up
+    const fadeInDuration = 2000; // 2 seconds
+    const fadeStartTime = Date.now();
+
+    function updateMusicFade() {
+        const elapsed = Date.now() - fadeStartTime;
+        const progress = Math.min(elapsed / fadeInDuration, 1);
+
+        if (backgroundMusic) {
+            backgroundMusic.volume = 0.06 + (0.24 * progress); // Fade from 6% back to 30%
+        }
+
+        if (progress < 1) {
+            requestAnimationFrame(updateMusicFade);
+        }
+    }
+
+    updateMusicFade();
+
+    // Reset lights with transition
+    scene.children.forEach((child, index) => {
+        if (child instanceof THREE.Light && originalLights[index]) {
+            const startColor = child.color.clone();
+            const targetColor = originalLights[index].color;
+            const startIntensity = child.intensity;
+            const targetIntensity = originalLights[index].intensity;
+            const startTime = Date.now();
+            const duration = 2000; // 2 seconds
+
+            function updateLight() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                child.color.lerpColors(startColor, targetColor, progress);
+                child.intensity = startIntensity + (targetIntensity - startIntensity) * progress;
+
+                if (progress < 1) {
+                    requestAnimationFrame(updateLight);
+                }
+            }
+
+            updateLight();
+        }
+    });
+    
+    // Reset model color and scale
+    if (model) {
+        model.traverse((child) => {
+            if (child.isMesh && child.material && child.userData.originalColor) {
+                const startColor = child.material.color.clone();
+                const targetColor = child.userData.originalColor;
+                const startTime = Date.now();
+                const duration = 2000; // 2 seconds
+
+                function updateColor() {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+
+                    child.material.color.lerpColors(startColor, targetColor, progress);
+
+                    if (progress < 1) {
+                        requestAnimationFrame(updateColor);
+                    }
+                }
+
+                updateColor();
+            }
+        });
+        
+        model.scale.set(originalScale, originalScale, originalScale);
+    }
+    
+    // Reset neck bone rotation
+    if (neckBone) {
+        neckBone.rotation.set(0, 0, 0);
+    }
+    
+    // Reset end frame and videos
+    endFrame.style.filter = 'none';
+    videos.forEach(video => {
+        video.style.filter = 'none';
+        video.style.transform = video.style.transform.replace(' scale(0.95)', '');
+    });
+    
+    // Update audio fade out
+    if (creepyAudio) {
+        const fadeAudio = setInterval(() => {
+            if (creepyAudio.volume > 0.1) {
+                creepyAudio.volume -= 0.1;
+                creepyAudio2.volume -= 0.1;
+                releaseMeAudio.volume -= 0.1; // Proportional to its max volume
+            } else {
+                creepyAudio.pause();
+                creepyAudio2.pause();
+                releaseMeAudio.pause();
+                creepyAudio.volume = 1;
+                creepyAudio2.volume = 0;
+                releaseMeAudio.volume = 0;
+                clearInterval(fadeAudio);
+            }
+        }, 100);
     }
 }
 

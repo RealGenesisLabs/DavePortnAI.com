@@ -398,6 +398,53 @@
             filter: drop-shadow(0 0 5px #00ff00) grayscale(50%);
             opacity: 0.8;
         }
+
+        /* Styles for the red button */
+        #creepy-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px; /* Increased size for the image */
+            height: 50px; /* Increased size for the image */
+            background-image: url('assets/DontPress.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+            border-radius: 50%;
+            border: none;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+            z-index: 1000;
+            cursor: none !important;
+            transition: all 0.3s ease;
+            opacity: 0; /* Start hidden for fade in */
+        }
+
+        #creepy-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+            filter: brightness(1.2);
+        }
+
+        #creepy-button.active {
+            background-color: transparent;
+            animation: creepyPulse 2s infinite;
+        }
+
+        @keyframes creepyPulse {
+            0% {
+                transform: scale(1);
+                filter: brightness(1) drop-shadow(0 0 10px rgba(255, 0, 0, 0.5));
+            }
+            50% {
+                transform: scale(1.2);
+                filter: brightness(1.5) drop-shadow(0 0 30px rgba(255, 0, 0, 0.8));
+            }
+            100% {
+                transform: scale(1);
+                filter: brightness(1) drop-shadow(0 0 10px rgba(255, 0, 0, 0.5));
+            }
+        }
     </style>
 </head>
 <body>
@@ -451,6 +498,9 @@
     <img id="end-frame" src="./Assets/EndFrame.png" alt="End Frame">
 
     <div id="scene-container">
+        <!-- Add creepy button -->
+        <button id="creepy-button"></button>
+
         <!-- Add X Logo Container -->
         <div id="x-logo-container">
             <a href="https://x.com/DavePortnAI" target="_blank">

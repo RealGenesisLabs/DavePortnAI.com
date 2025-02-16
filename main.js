@@ -342,29 +342,20 @@ function showVideos() {
         video.appendChild(twitterIcon); // Add icon to the video container
 
         // --- Set Tweet Content (Different for each video) ---
-        let tweetText = "";
-        switch (index) {
-            case 0:
-                tweetText = "Check out this awesome video 1! #video1";
-                break;
-            case 1:
-                tweetText = "This is video 2, it's amazing! #video2";
-                break;
-            case 2:
-                tweetText = "Video 3 is the best! #video3";
-                break;
-            case 3:
-                tweetText = "Don't miss video 4! #video4";
-                break;
-            case 4:
-                tweetText = "Video 5 is here! #video5";
-                break;
-            case 5:
-                tweetText = "Finally, video 6! #video6";
-                break;
-            default: // Good practice to have a default
-                tweetText = "Check out this cool 3D website!";
+        // Get Streamable link from the iframe within the video container
+        let streamableLink = video.querySelector('iframe').src;
+
+        // --- Clean up the Streamable link ---
+        // 1. Remove '/e/'
+        streamableLink = streamableLink.replace('/e/', '/');
+
+        // 2. Remove query parameters (everything after '?')
+        const questionMarkIndex = streamableLink.indexOf('?');
+        if (questionMarkIndex !== -1) {
+            streamableLink = streamableLink.substring(0, questionMarkIndex);
         }
+
+        let tweetText = `@stoolpresidente this you?\n\nwww.DavePortnAI.com\n\n ${streamableLink}`;
 
         // --- Create Twitter Share URL ---
         const twitterShareURL = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
